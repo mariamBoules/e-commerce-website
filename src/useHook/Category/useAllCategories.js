@@ -7,12 +7,13 @@ import {
 
 export const UseAllCategories = () => {
   const dispatch = useDispatch();
+  let limit = 12
   useEffect(() => {
-    dispatch(getAllCategories(5));
+    dispatch(getAllCategories(limit));
   }, []);
 
-  const getPage = (page) => {
-    dispatch(getAllCategoriesPage(page));
+  const getPage = async (page) => {
+    await dispatch(getAllCategoriesPage(page, limit));
   };
 
   const categories = useSelector((state) => state.allcategories.categories);

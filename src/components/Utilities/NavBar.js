@@ -4,8 +4,13 @@ import cart from "../../images/cart.png";
 import login from "../../images/login.png";
 import logo from "../../images/logo.png";
 import { Navbar } from "react-bootstrap";
+import useNavBarSearch from "../../useHook/Search/useNavBarSearch";
 
 function NavBar() {
+  const [onChangeKeyword] = useNavBarSearch();
+  let word = "";
+  if (localStorage.getItem("keyword")) word = localStorage.getItem("keyword");
+
   return (
     <Navbar expand="lg" className="px-3" variant="dark" bg="dark">
       <Container fluid>
@@ -16,6 +21,8 @@ function NavBar() {
         <Navbar.Collapse id="navbarScroll">
           <Form className="d-flex flex-grow-1 me-3">
             <Form.Control
+              onChange={onChangeKeyword}
+              value={word}
               type="search"
               placeholder="Search products..."
               className="me-2 w-100"

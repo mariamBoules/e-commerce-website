@@ -1,6 +1,9 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getSpecificProduct } from "../../Redux/Actions/ProductAction";
+import {
+  getRecommendedProduct,
+  getSpecificProduct,
+} from "../../Redux/Actions/ProductAction";
 import default_img from "../../images/default_img.jpg";
 import { getSpecificCategory } from "../../Redux/Actions/AllCategoriesAction";
 import { getSpecificBrand } from "../../Redux/Actions/AllBrandsAction";
@@ -12,8 +15,13 @@ const useViewSpecificProduct = (id) => {
   }, []);
 
   const product = useSelector((state) => state.allproducts.specificProduct);
-  const specificCategory = useSelector((state) => state.allcategories.specificCategory);
-  const specificBrand = useSelector((state)=>state.allbrands.specificBrand)
+  const specificCategory = useSelector(
+    (state) => state.allcategories.specificCategory
+  );
+  const specificBrand = useSelector((state) => state.allbrands.specificBrand);
+  const recommendedProducts = useSelector(
+    (state) => state.allproducts.recommendedProducts
+  );
 
   let item = [];
 
@@ -23,25 +31,31 @@ const useViewSpecificProduct = (id) => {
 
   useEffect(() => {
     if (item?.category) dispatch(getSpecificCategory(item.category));
-  }, [item]);
-
-let category = []
-if(specificCategory?.data){
-  category = specificCategory.data.name
-}else {
-  category = []
-}
-
-  useEffect(() => {
     if (item?.brand) dispatch(getSpecificBrand(item.brand));
+    if (item?.category) dispatch(getRecommendedProduct(item.category));
   }, [item]);
 
-let brands = []
-if(specificBrand?.data){
-  brands = specificBrand.data.name
-}else {
-  brands = []
-}
+  let category = [];
+  if (specificCategory?.data) {
+    category = specificCategory.data.name;
+  } else {
+    category = [];
+  }
+
+  let brands = [];
+  if (specificBrand?.data) {
+    brands = specificBrand.data.name;
+  } else {
+    brands = [];
+  }
+
+  let recommended = [];
+  if (recommendedProducts?.data) {
+    recommended = recommendedProducts.data.data.slice(0,4);
+
+  } else {
+    recommended = [];
+  }
 
   let images = [];
   if (item.images) {
@@ -55,7 +69,7 @@ if(specificBrand?.data){
       },
     ];
   }
-  return [item, images, category,brands];
+  return [item, images, category, brands, recommended];
 };
 
 export default useViewSpecificProduct;

@@ -5,6 +5,7 @@ import UseAllCategories from "../../useHook/Category/useAllCategories";
 const AllCategoriesPage = () => {
   const [getPage, loading, categories, pageCount] = UseAllCategories();
   return (
+    
     <div style={{ minHeight: "670px" }}>
       <CategoriesContainer data={categories.data} loading={loading} />
 

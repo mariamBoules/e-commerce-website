@@ -22,9 +22,9 @@ export const getAllCategories = (limit) => async (dispatch) => {
   }
 };
 
-export const getAllCategoriesPage = (page) => async (dispatch) => {
+export const getAllCategoriesPage = (page,limit) => async (dispatch) => {
   try {
-    const res = await useGetData(`/api/v1/categories?limit=5&page=${page}`);
+    const res = await useGetData(`/api/v1/categories?limit=${limit}&page=${page}`);
     dispatch({
       type: ALL_CATEGORIES,
       payload: res.data,

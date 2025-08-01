@@ -17,6 +17,8 @@ const useViewProducts = () => {
   }
   else items = [];
 
+  
+
   return [items];
 };
 

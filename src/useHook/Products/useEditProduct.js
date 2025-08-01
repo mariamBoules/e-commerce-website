@@ -4,10 +4,22 @@ import { getAllCategories } from "../../Redux/Actions/AllCategoriesAction";
 import { getAllBrands } from "../../Redux/Actions/AllBrandsAction";
 import { getSubCategory } from "../../Redux/Actions/SubCategoryAction";
 import notify from "../useNotify";
-import { postNewProduct } from "../../Redux/Actions/ProductAction";
+import {
+  getSpecificProduct,
+  updateProduct,
+} from "../../Redux/Actions/ProductAction";
 
-const useCreateProduct = () => {
+const useEditProduct = (id) => {
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const run = async () => {
+      await dispatch(getAllCategories());
+      await dispatch(getAllBrands());
+      await dispatch(getSpecificProduct(id));
+    };
+    run();
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [images, setImages] = useState([]);
@@ -26,17 +38,30 @@ const useCreateProduct = () => {
 
   const [options, setOptions] = useState([]);
 
+  const product = useSelector((state) => state.allproducts.specificProduct);
   const categories = useSelector((state) => state.allcategories.categories);
   const brands = useSelector((state) => state.allbrands.brands);
   const subcategories = useSelector(
     (state) => state.allsubcategories.subCategories
   );
-  const products = useSelector((state) => state.allproducts.products);
+  const updatedProduct = useSelector(
+    (state) => state.allproducts.updatedProduct
+  );
 
   useEffect(() => {
-    dispatch(getAllCategories());
-    dispatch(getAllBrands());
-  }, []);
+    if (product && product.data?.data) {
+      setImages(product.data.data.images);
+      setProductName(product.data.data.title);
+      setProductDescription(product.data.data.description);
+      setPad(product.data.data.price);
+      setBrandId(product.data.data.brand);
+      setProductCategoryId(product.data.data.category);
+      setProductQuantity(product.data.data.quantity);
+      setColors(product.data.data.availableColors);
+
+      dispatch(getSubCategory(product.data.data.category));
+    }
+  }, [product]);
 
   useEffect(() => {
     if (ProductCategoryId && ProductCategoryId !== "0") {
@@ -100,6 +125,22 @@ const useCreateProduct = () => {
     setImages(imageList);
   };
 
+  useEffect(() => {
+    if (subcategories && subcategories.data?.data) {
+      const formatted = subcategories.data.data.map((item) => ({
+        value: item._id,
+        label: item.name,
+      }));
+      setOptions(formatted);
+
+      const selectedSubs = product?.data?.data?.subcategory || [];
+      const selected = formatted.filter((opt) =>
+        selectedSubs.includes(opt.value)
+      );
+      setSelectedSubCategory(selected);
+    }
+  }, [subcategories, product]);
+
   const selectCategory = async (e) => {
     setSelectedSubCategory([]);
     const selectedId = e.target.value;
@@ -114,23 +155,88 @@ const useCreateProduct = () => {
     setBrandId(e.target.value);
   };
 
+  const convertUrlToFileObject = async (url, index) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    let type = blob.type;
+    if (!type.startsWith("image")) {
+      const ext = url.split(".").pop().toLowerCase();
+      type =
+        ext === "png"
+          ? "image/png"
+          : ext === "jpg" || ext === "jpeg"
+          ? "image/jpeg"
+          : "image/*";
+    }
+
+    const filename = `image-${index}.${type.split("/")[1]}`;
+    const file = new File([blob], filename, { type });
+
+    const reader = new FileReader();
+    return new Promise((resolve) => {
+      reader.onloadend = () => {
+        resolve({
+          file,
+          data_url: reader.result,
+        });
+      };
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  useEffect(() => {
+    const loadProductData = async () => {
+      if (product && product.data?.data) {
+        const prod = product.data.data;
+
+        const convertedImages = await Promise.all(
+          prod.images.map((url, index) => convertUrlToFileObject(url, index))
+        );
+
+        //console.log(convertedImages[0].file);
+        setImages(convertedImages);
+        setProductName(prod.title);
+        setProductDescription(prod.description);
+        setPad(prod.price);
+        setBrandId(prod.brand);
+        setProductCategoryId(prod.category);
+        setProductQuantity(prod.quantity);
+        setColors(prod.availableColors);
+
+        dispatch(getSubCategory(prod.category));
+      }
+    };
+
+    loadProductData();
+  }, [product]);
+
   const submitForm = async (e) => {
     e.preventDefault();
 
     if (
       ProductName === "" ||
-      !images[0] ||
       ProductCategoryId === 0 ||
-      ProductQuantity === ""
+      ProductQuantity === "" ||
+      images[0] == null
     ) {
       notify("Some fields are missing", "warn");
       return;
     }
-    if (Number(Pad) <= 0 || Number(Pbd) <= 0 || Number(Pad) > Number(Pbd)) {
+    if (
+      (Pad && Number(Pad) <= 0) ||
+      (Pbd && Number(Pbd) <= 0) ||
+      (Pad && Pbd && Number(Pad) > Number(Pbd))
+    ) {
       notify("Wrong pricing", "warn");
       return;
     }
 
+    if (!images[0]?.file) {
+      notify("Image format is invalid", "warn");
+      return;
+    }
+    //console.log(images[0].file);
     const formData = new FormData();
     formData.append("title", ProductName);
     formData.append("imageCover", images[0].file);
@@ -141,13 +247,13 @@ const useCreateProduct = () => {
     formData.append("brand", BrandId);
 
     colors.forEach((color) => formData.append("availableColors", color));
-    SelectedSubCategory.map((sub) => {
-      formData.append("subcategory", sub.value);
-    });
+    (Array.isArray(SelectedSubCategory) ? SelectedSubCategory : []).forEach(
+      (sub) => formData.append("subcategory", sub.value)
+    );
     images.map((img) => formData.append("images", img.file));
 
     setLoading(true);
-    await dispatch(postNewProduct(formData));
+    await dispatch(updateProduct(id, formData));
     setLoading(false);
   };
 
@@ -164,8 +270,11 @@ const useCreateProduct = () => {
       setColors([]);
       setImages([]);
 
-      if (products?.status === 201) {
-        notify("Added Successfully", "success");
+      if (updatedProduct && updatedProduct.status === 200) {
+        notify("Updated Successfully", "success");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         notify("An error occured", "error");
       }
@@ -206,4 +315,4 @@ const useCreateProduct = () => {
   ];
 };
 
-export default useCreateProduct;
+export default useEditProduct;

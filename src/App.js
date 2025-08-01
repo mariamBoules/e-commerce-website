@@ -25,6 +25,7 @@ import UserAllAddressesPage from "./pages/User/UserAllAddressesPage";
 import UserAddAddressPage from "./pages/User/UserAddAddressPage";
 import UserEditAddressPage from "./pages/User/UserEditAddressPage";
 import UserProfilePage from "./pages/User/UserProfilePage";
+import AdminEditProductPage from "./pages/Admin/AdminEditProductPage";
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
           <Route path="/user/address/add" element={<UserAddAddressPage />} />
           <Route path="/user/address/edit" element={<UserEditAddressPage />} />
           <Route path="/user/profile" element={<UserProfilePage />} />
+          <Route path="/admin/edit/:id" element={<AdminEditProductPage />} />
         </Routes>
       </BrowserRouter>
       <Footer />

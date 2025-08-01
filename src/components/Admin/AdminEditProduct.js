@@ -5,9 +5,11 @@ import Select from "react-select";
 import add from "../../images/add.png";
 import ImageUploading from "react-images-uploading";
 import { Compact } from "@uiw/react-color";
-import useCreateProduct from "../../useHook/Products/useCreateProduct";
+import { useParams } from "react-router-dom";
+import useEditProduct from "../../useHook/Products/useEditProduct";
 
-const AdminAddProduct = () => {
+const AdminEditProduct = () => {
+  const { id } = useParams();
   const [
     handleChoosingColor,
     handlePad,
@@ -36,10 +38,10 @@ const AdminAddProduct = () => {
     colors,
     showColor,
     handleReverseShowColor,
-  ] = useCreateProduct();
+  ] = useEditProduct(id);
   return (
     <Container>
-      <Row className="admin-content-text mt-3">Add a Product</Row>
+      <Row className="admin-content-text mt-3">Edit a Product</Row>
       <Row>
         <div className="text-form py-3 mx-4">Product Image</div>
         <div className="App">
@@ -49,7 +51,7 @@ const AdminAddProduct = () => {
             onChange={onChangeImages}
             maxNumber={5}
             dataURLKey="data_url"
-            acceptType={["jpg", "png", "jpeg"]}
+            acceptType={["jpg", "png"]}
           >
             {({
               imageList,
@@ -205,7 +207,7 @@ const AdminAddProduct = () => {
           value={ProductCategoryId}
         >
           <option value="0">--- Select Category ---</option>
-          {categories.data
+          {categories?.data?.length > 0
             ? categories.data.map((item, index) => {
                 return (
                   <option key={index} value={item._id}>
@@ -248,7 +250,7 @@ const AdminAddProduct = () => {
           onChange={selectBrand}
         >
           <option value="0">--- Select Brand ---</option>
-          {brands.data
+          {brands?.data?.length > 0
             ? brands.data.map((item, index) => {
                 return (
                   <option key={index} value={item._id}>
@@ -305,4 +307,4 @@ const AdminAddProduct = () => {
   );
 };
 
-export default AdminAddProduct;
+export default AdminEditProduct;
